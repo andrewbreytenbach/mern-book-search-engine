@@ -2,90 +2,66 @@ const { User, Book } = require('./models');
 
 const resolvers = {
   Query: {
-    me: async () => {
-      // Implement the logic to fetch the currently authenticated user
-      // Example: Return a mock user
-      return {
-        _id: 'user_id',
-        username: 'example_user',
-        email: 'example@example.com',
-        bookCount: 3,
-        savedBooks: [
-          {
-            bookId: 'book1_id',
-            authors: ['Author 1'],
-            description: 'Book 1 description',
-            title: 'Book 1',
-            image: 'book1_image.jpg',
-            link: 'book1_link',
-          },
-          {
-            bookId: 'book2_id',
-            authors: ['Author 2'],
-            description: 'Book 2 description',
-            title: 'Book 2',
-            image: 'book2_image.jpg',
-            link: 'book2_link',
-          },
-        ],
-      };
+    me: async (parent, args, context) => {
+      if (context.user) {
+        const userData = await User.findOne({ _id: context.user._id }).populate('savedBooks');
+        return userData;
+      }
+      throw new Error('Not authenticated');
     },
   },
   Mutation: {
     login: async (parent, { email, password }) => {
-      // Implement the logic for user authentication and token generation
-      // Example: Authenticate the user and return a mock token
-      const token = 'your_token';
-      
-      // Retrieve the user based on email (you can use any logic here, like a database query)
       const user = await User.findOne({ email });
 
       if (!user) {
         throw new Error('Invalid email or password');
       }
 
+      const correctPassword = await user.isCorrectPassword(password);
+
+      if (!correctPassword) {
+        throw new Error('Invalid email or password');
+      }
+
+      const token = signToken(user);
       return {
         token,
         user,
       };
     },
     addUser: async (parent, { username, email, password }) => {
-      // Implement the logic to create a new user
-      // Example: Create a new user and return a mock token
-      const token = 'your_token';
-
       const user = await User.create({ username, email, password });
 
+      const token = signToken(user);
       return {
         token,
         user,
       };
     },
-    saveBook: async (parent, { bookInput }) => {
-      // Implement the logic to save a book to a user's collection
-      // Example: Assume the user is authenticated and add the book to their savedBooks
-      const currentUser = await User.findOne({ _id: 'user_id' });
+    saveBook: async (parent, { bookInput }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: bookInput }, $inc: { bookCount: 1 } },
+          { new: true }
+        ).populate('savedBooks');
 
-      const newBook = await Book.create(bookInput);
-
-      currentUser.savedBooks.push(newBook);
-      currentUser.bookCount += 1;
-      await currentUser.save();
-
-      return currentUser;
+        return updatedUser;
+      }
+      throw new Error('Not authenticated');
     },
-    removeBook: async (parent, { bookId }) => {
-      // Implement the logic to remove a book from a user's collection
-      // Example: Assume the user is authenticated and remove the book from their savedBooks
-      const currentUser = await User.findOne({ _id: 'user_id' });
+    removeBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId } }, $inc: { bookCount: -1 } },
+          { new: true }
+        ).populate('savedBooks');
 
-      currentUser.savedBooks = currentUser.savedBooks.filter(
-        (book) => book.bookId !== bookId
-      );
-      currentUser.bookCount -= 1;
-      await currentUser.save();
-
-      return currentUser;
+        return updatedUser;
+      }
+      throw new Error('Not authenticated');
     },
   },
 };
