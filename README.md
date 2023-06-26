@@ -55,7 +55,7 @@ Once the MERN Book Search Engine is running, you can use the following steps to 
 If you have any questions or would like to learn more about this project, feel free to reach out through the following channels:
 
 * GitHub: https://github.com/andrewbreytenbach/mern-book-search-engine
-* View the finished application here: https://mern-booksearch-engine-21.herokuapp.com/
+* View the finished application here: https://mern-booksearch-engine-21-fdbd959ad9c4.herokuapp.com/
 
 ## Acknowledgments
 The MERN Book Search Engine utilizes the following technologies:
