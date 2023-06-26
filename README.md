@@ -15,7 +15,7 @@ The MERN Book Search Engine offers the following key features:
 ## Getting Started
 To run the MERN Book Search Engine on your local machine, follow these steps:
 
-1. Clone the repository: git clone https://github.com/your-username/mern-book-search-engine
+1. Clone the repository: git clone https://github.com/andrewbreytenbach/mern-book-search-engine
 2. Navigate to the project directory: cd mern-book-search-engine
 3. Install the necessary dependencies:
 4. Backend: Run npm install in the root directory.
@@ -32,11 +32,13 @@ Frontend: In the client directory, run npm start to start the React development 
 ## Usage
 Once the MERN Book Search Engine is running, you can use the following steps to explore its functionality:
 
-![](./public/img/resume.png)
-
 * Home Page: The home page displays a search bar where you can enter keywords to search for books.
 
+![](/search.png)
+
 * Search Results: After entering a search query and clicking the search button, the application will fetch search results from the Google Books API and display them on the page. Each search result will include the book's title, author(s), description, image, and a link to the Google Books site.
+
+![](/searchresults.png)
 
 * User Authentication:
 
@@ -52,8 +54,8 @@ Once the MERN Book Search Engine is running, you can use the following steps to 
 ## Contact
 If you have any questions or would like to learn more about this project, feel free to reach out through the following channels:
 
-* GitHub: https://github.com/andrewbreytenbach/react-professional-portfolio
-* View the finished application here: https://react-professional-portolio.herokuapp.com/
+* GitHub: https://github.com/andrewbreytenbach/mern-book-search-engine
+* View the finished application here: https://mern-booksearch-engine-21.herokuapp.com/
 
 ## Acknowledgments
 The MERN Book Search Engine utilizes the following technologies:
@@ -73,4 +75,4 @@ The MERN Book Search Engine utilizes the following technologies:
 * Git: A version control system for tracking changes in the source code.
 * GitHub: A web-based hosting service for version control and collaboration.
 * Heroku: A cloud platform for deploying and hosting the application.
-* https://github.com/coding-boot-camp/solid-broccoli Starter Code
+* [https://github.com/coding-boot-camp/solid-broccoli] Starter Code
