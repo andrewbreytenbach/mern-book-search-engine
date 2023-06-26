@@ -5,8 +5,12 @@ const userResolvers = {
     // Add your authentication logic here
     // Example: Check if the user is authenticated using context
 
+    if (!context.user) {
+      throw new Error('Authentication required');
+    }
+
     // Retrieve the currently logged-in user
-    const currentUser = await User.findOne({ /* Your query to find the user */ });
+    const currentUser = await User.findById(context.user._id);
 
     return currentUser;
   },
@@ -20,11 +24,18 @@ const userResolvers = {
       throw new Error('Invalid email or password');
     }
 
-    // Compare password and generate token
-    // ...
+    // Compare password
+    const isPasswordValid = await user.comparePassword(password);
+
+    if (!isPasswordValid) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Generate token
+    const token = generateToken(user);
 
     return {
-      token: 'your_token',
+      token,
       user,
     };
   },
@@ -32,10 +43,19 @@ const userResolvers = {
     // Implement your logic to create a new user
     // Example: Create a new user with the provided data
 
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+
+    if (existingUser) {
+      throw new Error('Username or email already exists');
+    }
+
     const user = await User.create({ username, email, password });
 
+    // Generate token
+    const token = generateToken(user);
+
     return {
-      token: 'your_token',
+      token,
       user,
     };
   },
@@ -43,7 +63,12 @@ const userResolvers = {
     // Add your authentication logic here
     // Example: Check if the user is authenticated using context
 
-    const currentUser = await User.findOne({ /* Your query to find the user */ });
+    if (!context.user) {
+      throw new Error('Authentication required');
+    }
+
+    // Find the current user
+    const currentUser = await User.findById(context.user._id);
 
     // Create a new book using the bookInput and save it to the database
     const newBook = await Book.create(bookInput);
@@ -57,15 +82,22 @@ const userResolvers = {
   },
   removeBook: async (parent, { bookId }, context) => {
     // Add your authentication logic here
-    
     // Example: Check if the user is authenticated using context
 
-    const currentUser = await User.findOne({ /* Your query to find the user */ });
+    if (!context.user) {
+      throw new Error('Authentication required');
+    }
+
+    // Find the current user
+    const currentUser = await User.findById(context.user._id);
 
     // Remove the book from the currentUser's savedBooks array based on bookId
-    currentUser.savedBooks = currentUser.savedBooks.filter(
-      (book) => book.bookId !== bookId
-    );
+    const bookIndex = currentUser.savedBooks.findIndex((book) => book.bookId === bookId);
+    if (bookIndex === -1) {
+      throw new Error('Book not found in savedBooks');
+    }
+
+    currentUser.savedBooks.splice(bookIndex, 1);
     currentUser.bookCount -= 1;
     await currentUser.save();
 
