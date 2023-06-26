@@ -5,24 +5,36 @@ const { typeDefs, resolvers } = require('./schema'); // import typeDefs and reso
 const db = require('./config/connection');
 const routes = require('./routes');
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+async function startApolloServer() {
+  const app = express();
+  const PORT = process.env.PORT || 3001;
 
-// Apollo Server setup
-const server = new ApolloServer({ typeDefs, resolvers });
-server.applyMiddleware({ app });
+  // Apollo Server setup
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req }) => ({ req }), // Provide access to the request object in the context
+  });
 
-// Middleware and routes
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+  await server.start();
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  // Apply Apollo Server middleware before other middleware and routes
+  server.applyMiddleware({ app });
+
+  // Middleware and routes
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+  }
+
+  app.use(routes);
+
+  // Connect to the database and start the server
+  db.once('open', () => {
+    app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
+  });
 }
 
-app.use(routes);
-
-// Connect to the database and start the server
-db.once('open', () => {
-  app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
-});
+startApolloServer().catch((err) => console.error(err));

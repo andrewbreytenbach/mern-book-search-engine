@@ -57,6 +57,7 @@ const userResolvers = {
   },
   removeBook: async (parent, { bookId }, context) => {
     // Add your authentication logic here
+    
     // Example: Check if the user is authenticated using context
 
     const currentUser = await User.findOne({ /* Your query to find the user */ });

@@ -1,73 +1,76 @@
-// import user model
 const { User } = require('../models');
-// import sign token function from auth
 const { signToken } = require('../utils/auth');
 
 module.exports = {
-  // get a single user by either their id or their username
-  async getSingleUser({ user = null, params }, res) {
-    const foundUser = await User.findOne({
-      $or: [{ _id: user ? user._id : params.id }, { username: params.username }],
-    });
-
-    if (!foundUser) {
-      return res.status(400).json({ message: 'Cannot find a user with this id!' });
-    }
-
-    res.json(foundUser);
-  },
-  // create a user, sign a token, and send it back (to client/src/components/SignUpForm.js)
-  async createUser({ body }, res) {
-    const user = await User.create(body);
-
-    if (!user) {
-      return res.status(400).json({ message: 'Something is wrong!' });
-    }
-    const token = signToken(user);
-    res.json({ token, user });
-  },
-  // login a user, sign a token, and send it back (to client/src/components/LoginForm.js)
-  // {body} is destructured req.body
-  async login({ body }, res) {
-    const user = await User.findOne({ $or: [{ username: body.username }, { email: body.email }] });
-    if (!user) {
-      return res.status(400).json({ message: "Can't find this user" });
-    }
-
-    const correctPw = await user.isCorrectPassword(body.password);
-
-    if (!correctPw) {
-      return res.status(400).json({ message: 'Wrong password!' });
-    }
-    const token = signToken(user);
-    res.json({ token, user });
-  },
-  // save a book to a user's `savedBooks` field by adding it to the set (to prevent duplicates)
-  // user comes from `req.user` created in the auth middleware function
-  async saveBook({ user, body }, res) {
-    console.log(user);
+  // Resolver for getting a user by their ID
+  getUser: async (_, { userId }) => {
     try {
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $addToSet: { savedBooks: body } },
+      const user = await User.findById(userId);
+      return user;
+    } catch (err) {
+      throw new Error('Failed to fetch user');
+    }
+  },
+
+  // Resolver for creating a new user
+  createUser: async (_, { input }) => {
+    try {
+      const user = await User.create(input);
+      const token = signToken(user);
+      return { user, token };
+    } catch (err) {
+      throw new Error('Failed to create user');
+    }
+  },
+
+  // Resolver for user login
+  login: async (_, { input }) => {
+    try {
+      const { username, password } = input;
+      const user = await User.findOne({ username });
+
+      if (!user) {
+        throw new Error("Can't find this user");
+      }
+
+      const correctPw = await user.isCorrectPassword(password);
+
+      if (!correctPw) {
+        throw new Error('Wrong password!');
+      }
+
+      const token = signToken(user);
+      return { user, token };
+    } catch (err) {
+      throw new Error('Failed to login');
+    }
+  },
+
+  // Resolver for saving a book to a user's savedBooks field
+  saveBook: async (_, { userId, bookInput }) => {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { savedBooks: bookInput } },
         { new: true, runValidators: true }
       );
-      return res.json(updatedUser);
+      return updatedUser;
     } catch (err) {
-      console.log(err);
-      return res.status(400).json(err);
+      throw new Error('Failed to save book');
     }
   },
-  // remove a book from `savedBooks`
-  async deleteBook({ user, params }, res) {
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: user._id },
-      { $pull: { savedBooks: { bookId: params.bookId } } },
-      { new: true }
-    );
-    if (!updatedUser) {
-      return res.status(404).json({ message: "Couldn't find user with this id!" });
+
+  // Resolver for deleting a book from a user's savedBooks field
+  deleteBook: async (_, { userId, bookId }) => {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $pull: { savedBooks: { bookId } } },
+        { new: true }
+      );
+      return updatedUser;
+    } catch (err) {
+      throw new Error('Failed to delete book');
     }
-    return res.json(updatedUser);
   },
 };
