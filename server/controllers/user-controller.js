@@ -46,6 +46,16 @@ module.exports = {
     }
   },
 
+  // Resolver for getting a single user by their ID
+  getSingleUser: async (_, args) => {
+    try {
+      const user = await User.findById(args.userId);
+      return user;
+    } catch (err) {
+      throw new Error('Failed to fetch user');
+    }
+  },
+
   // Resolver for saving a book to a user's savedBooks field
   saveBook: async (_, { userId, bookInput }) => {
     try {
