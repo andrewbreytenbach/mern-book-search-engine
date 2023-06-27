@@ -1,11 +1,11 @@
 const express = require('express');
 const path = require('path');
 const { ApolloServer } = require('apollo-server-express');
-const { typeDefs, resolvers } = require('./schemas'); // import typeDefs and resolvers
+const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
 const routes = require('./routes');
 const { GraphQLModule } = require('graphql-modules');
-const { ApolloDriver } = require('apollo-server-express'); // Replace 'your-apollo-driver-package' with 'apollo-server-express'
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core'); // Import the necessary plugin
 
 async function startApolloServer() {
   const app = express();
@@ -15,7 +15,8 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }) => ({ req }), // Provide access to the request object in the context
+    context: ({ req }) => ({ req }),
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()], // Add the playground plugin
   });
 
   await server.start();
@@ -23,10 +24,9 @@ async function startApolloServer() {
   // Apply Apollo Server middleware before other middleware and routes
   server.applyMiddleware({ app });
 
-  // Add the provided code here
   const driverConfig = {
     driver: ApolloDriver,
-    cache: 'bounded', // <--- This option
+    cache: 'bounded',
     // Other configuration options for your Apollo Driver
   };
 
