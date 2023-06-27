@@ -12,7 +12,11 @@ const typeDefs = gql`
   }
 
   type Book {
-    # Define the fields of the Book type here
+    _id: ID
+    title: String
+    author: String
+    description: String
+    # Add other fields for the Book type if necessary
   }
 
   type Query {
@@ -29,7 +33,10 @@ const typeDefs = gql`
   }
 
   input BookInput {
-    # Define the fields needed for saving a book
+    title: String
+    author: String
+    description: String
+    # Add other fields needed for saving a book
   }
 
   type AuthData {
